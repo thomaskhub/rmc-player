@@ -1,0 +1,43 @@
+{
+  "port": "8880",
+  "enableLog": true,
+  "linuxDirBlacklist": [
+    "/boot",
+    "/lost+found",
+    "/opt",
+    "/root",
+    "/etc",
+    "/sys",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/dev",
+    "/proc",
+    "/run",
+    "/snap",
+    "/tmp",
+    "/srv",
+    "/var",
+    "/cdrom"
+  ],
+  "darwinDirBlacklist": [
+    "/boot",
+    "/lost+found",
+    "/opt",
+    "/root",
+    "/etc",
+    "/sys",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/dev",
+    "/proc",
+    "/run",
+    "/snap",
+    "/tmp",
+    "/srv",
+    "/var",
+    "/cdrom"
+  ],
+  "windowsDirBlacklist": []
+}
