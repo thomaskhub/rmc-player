@@ -76,10 +76,12 @@ function install() {
     #split the version with separator .
     IFS='.' read -r -a array <<< "$osVersion"
 
-    #Currently supported Ubuntu 20 | 22 | 23 but any other distro should be 
+    #Currently supported Ubuntu  22 | 23 but any other distro should be 
     # supported using the correct packag manger command to install SDL2 and libmpv
+    # but other distros would need to be tested
     if [[ ${array[0]} -eq 20 ]]; then
-       sudo apt install -y  libmpv1 libmpv-dev libsdl2-2.0-0 
+    #    sudo apt install -y  libmpv1 libmpv-dev libsdl2-2.0-0
+       echoError "Ubuntu 20 is not supported please upgrade to 22 / 23" 
     elif [[ ${array[0]} -eq 22 ]]; then
        sudo apt install -y  libmpv1 libmpv-dev libsdl2-2.0-0 
     elif [[ ${array[0]} -eq 23 ]]; then

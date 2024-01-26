@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 )
@@ -61,6 +62,9 @@ func main() {
 	if cfg.AssetPath == "" {
 		cfg.AssetPath = "./assets"
 	}
+
+	fmt.Printf("cfg.AssetPath: %v\n", cfg.AssetPath)
+	fmt.Printf("configFile: %v\n", configFile)
 
 	ScreensaverImage = cfg.AssetPath + "/screensaver.jpg"
 
