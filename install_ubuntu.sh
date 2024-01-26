@@ -76,9 +76,9 @@ function install() {
 
     #if array[0] is 22 install dependencies for ubuntu 22 if its 23 install 
     # dependencies for ubuntu 23
-    if [[ ${array[0]} -eq 22]]; then
+    if [[ ${array[0]} -eq 22 ]]; then
        sudo apt install -y  libmpv1 libmpv-dev libsdl2-2.0-0 
-    elif [[ ${array[0]} -eq 22]]; then
+    elif [[ ${array[0]} -eq 23 ]]; then
         sudo apt install -y  libmpv2 libmpv-dev libsdl2-2.0-0
     else
         echoError "ubuntu version not supported"
