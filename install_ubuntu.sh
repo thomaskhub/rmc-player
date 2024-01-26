@@ -67,6 +67,7 @@ function install() {
         echoInfo "go version $version is not ok, installing it temorarily..."
         wget -nc $GO_URL
         tar -xzf go1.21.6.linux-amd64.tar.gz
+        rm go1.21.6.linux-amd64.tar.gz
     fi
 
     # check if we are running on ubuntu 22 or ubuntu 23
@@ -106,7 +107,7 @@ function uninstall() {
     echoInfo "uninstalling rmc..."
     #do not remove the /opt/rmc dir because we are using this for the remote install also
     rm -rf $INSTALL_DIR/rmc-player
-    rm -rf $INSTALL_DIR/go
+    
 
     echoInfo "removing desktop file..."
     rm -rf $DEKSTOP_DIR/$DESKTOP_FILE
