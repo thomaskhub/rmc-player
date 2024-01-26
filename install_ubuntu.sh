@@ -9,7 +9,7 @@
 # configs
 #
 GIT_REPO=https://github.com/thomaskhub/rmc-player
-GIT_BRANCH=master
+GIT_BRANCH=main
 GO_URL=https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
 GO_BIN=/opt/rmc/go/bin/go
 INSTALL_DIR=/opt/rmc
