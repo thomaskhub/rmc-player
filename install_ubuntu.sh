@@ -41,10 +41,16 @@ function install() {
     # create the directories for installation if they do not exist
     # /opt | /opt/go | /opt/rmc-player
     echoInfo "create installation directories..."
-    rm -rf $INSTALL_DIR/rmc-player
-    mkdir -p $INSTALL_DIR/{go}
+    #check if install_dir/rmc-player exists if so remove it
+    if [[ -d $INSTALL_DIR/rmc-player ]]; then
+        rm -rf $INSTALL_DIR/rmc-player
+    fi;
+
+    sudo mkdir -p $INSTALL_DIR
     sudo chown -R $USER $INSTALL_DIR
     sudo chmod -R 777 $INSTALL_DIR
+
+    cd $INSTALL_DIR
 
     #check if git is installed
     git --version &> /dev/null
@@ -56,15 +62,10 @@ function install() {
     echoInfo "Cloning git repository..."
     git clone $GIT_REPO -b $GIT_BRANCH
 
-    #get the go version from the go installation if any
-    version=$($GO_BIN version | awk '{print $3}')
-    IFS='.' read -r -a array <<< "$version"
-
-    if [[ ${array[0]} -eq 1 && ${array[1]} -ge 21 ]]; then
-        echoInfo "go version $version is ok"
-    else
+    #check if go file exits or not
+    if [[ ! -f $GO_BIN ]]; then
         echoInfo "go version $version is not ok, installing it temorarily..."
-        wget $GO_URL
+        wget -nc $GO_URL
         tar -xzf go1.21.6.linux-amd64.tar.gz
     fi
 
@@ -72,7 +73,7 @@ function install() {
     osVersion=$(lsb_release -rs)
 
     #split the version with separator .
-    IFS='.' read -r -a array <<< "$version"
+    IFS='.' read -r -a array <<< "$osVersion"
 
     #if array[0] is 22 install dependencies for ubuntu 22 if its 23 install 
     # dependencies for ubuntu 23
@@ -92,7 +93,7 @@ function install() {
 
     # Install Desktop file so that rmc can be started from gui
     echoInfo "installing desktop file..."
-    cp ./$DESKTOP_FILE $DEKSTOP_DIR
+    sudo cp ./$DESKTOP_FILE $DEKSTOP_DIR
 
     # now we are done 
     cd $CWD
@@ -102,12 +103,12 @@ function install() {
 
 
 function uninstall() {
-    echoInfo("uninstalling rmc...")
+    echoInfo "uninstalling rmc..."
     #do not remove the /opt/rmc dir because we are using this for the remote install also
     rm -rf $INSTALL_DIR/rmc-player
     rm -rf $INSTALL_DIR/go
 
-    echoInfo("removing desktop file...")
+    echoInfo "removing desktop file..."
     rm -rf $DEKSTOP_DIR/$DESKTOP_FILE
 }
 
@@ -118,7 +119,7 @@ if [[ "$1" == "install" ]]; then
 elif [[ "$1" == "uninstall" ]]; then
     uninstall
 else
-    echoError("invalid argument")
+    echoError "invalid argument"
     exit 1
 fi
 
