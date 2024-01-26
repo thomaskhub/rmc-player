@@ -40,7 +40,7 @@ function install() {
 
     # create the directories for installation if they do not exist
     # /opt | /opt/go | /opt/rmc-player
-    echoInfo("create installation directories...")
+    echoInfo "create installation directories..."
     rm -rf $INSTALL_DIR/rmc-player
     mkdir -p $INSTALL_DIR/{go}
     sudo chown -R $USER $INSTALL_DIR
@@ -49,11 +49,11 @@ function install() {
     #check if git is installed
     git --version &> /dev/null
     if [[ $? -eq 127 ]]; then
-        echoInfo("git not installed, installing...")
+        echoInfo "git not installed, installing..."
         sudo apt install -y git
     fi
 
-    echoInfo("Cloning git repository...")
+    echoInfo "Cloning git repository..."
     git clone $GIT_REPO -b $GIT_BRANCH
 
     #get the go version from the go installation if any
@@ -61,9 +61,9 @@ function install() {
     IFS='.' read -r -a array <<< "$version"
 
     if [[ ${array[0]} -eq 1 && ${array[1]} -ge 21 ]]; then
-        echoInfo("go version $version is ok")
+        echoInfo "go version $version is ok"
     else
-        echoInfo("go version $version is not ok, installing it temorarily...")
+        echoInfo "go version $version is not ok, installing it temorarily..."
         wget $GO_URL
         tar -xzf go1.21.6.linux-amd64.tar.gz
     fi
@@ -86,18 +86,18 @@ function install() {
     fi
 
     # compile rmc player 
-    echoInfo("compiling rmc player...")
+    echoInfo "compiling rmc player..."
     cd $INSTALL_DIR/rmc-player
     $GO_BIN build -o rmc-player
 
     # Install Desktop file so that rmc can be started from gui
-    echoInfo("installing desktop file...")
+    echoInfo "installing desktop file..."
     cp ./$DESKTOP_FILE $DEKSTOP_DIR
 
     # now we are done 
     cd $CWD
 
-    echoInfo("installation complete")
+    echoInfo "installation complete"
 }
 
 
