@@ -1,4 +1,4 @@
-module bitbucket.com/thomaskhub/rmc
+module bitbucket.com/thomaskhub/rmc-player
 
 go 1.21.1
 

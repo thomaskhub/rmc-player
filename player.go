@@ -131,7 +131,8 @@ func NewPlayer(cfg Config) *Player {
 }
 
 func (p *Player) InitPlaylist(playlist []byte) {
-	err := p.m.Command([]string{"loadfile", "./assets/screensaver.jpg"})
+	err := p.m.Command([]string{"loadfile", ScreensaverImage})
+	// err := p.m.Command([]string{"loadfile", "./assets/screensaver.jpg"})
 	if err != nil {
 		panic(err)
 	}

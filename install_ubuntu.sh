@@ -76,9 +76,11 @@ function install() {
     #split the version with separator .
     IFS='.' read -r -a array <<< "$osVersion"
 
-    #if array[0] is 22 install dependencies for ubuntu 22 if its 23 install 
-    # dependencies for ubuntu 23
-    if [[ ${array[0]} -eq 22 ]]; then
+    #Currently supported Ubuntu 20 | 22 | 23 but any other distro should be 
+    # supported using the correct packag manger command to install SDL2 and libmpv
+    if [[ ${array[0]} -eq 20 ]]; then
+       sudo apt install -y  libmpv1 libmpv-dev libsdl2-2.0-0 
+    elif [[ ${array[0]} -eq 22 ]]; then
        sudo apt install -y  libmpv1 libmpv-dev libsdl2-2.0-0 
     elif [[ ${array[0]} -eq 23 ]]; then
         sudo apt install -y  libmpv2 libmpv-dev libsdl2-2.0-0
