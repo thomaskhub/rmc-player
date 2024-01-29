@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 )
@@ -15,15 +14,19 @@ type Config struct {
 	DarwinDirBlacklist  []string `json:"darwinDirBlacklist"`
 	WindowsDirBlacklist []string `json:"windowsDirBlacklist"`
 	AssetPath           string   `json:"assetPath"`
+	AudioOutput         string   `json:"audioOutput"`
+	PrimaryResolution   string   `json:"PrimaryResolution"`
+	SecondaryResolution string   `json:"SecondaryResolution"`
 }
 
 var cfg Config
 
 var ScreensaverImage string
+var configFile string
 
 func main() {
+	log.Println("load the configuration")
 	//read flag -c to specify a different config file path
-	var configFile string
 	flag.StringVar(&configFile, "c", "config.json", "config file path")
 	flag.Parse()
 
@@ -63,11 +66,16 @@ func main() {
 		cfg.AssetPath = "./assets"
 	}
 
-	fmt.Printf("cfg.AssetPath: %v\n", cfg.AssetPath)
-	fmt.Printf("configFile: %v\n", configFile)
-
 	ScreensaverImage = cfg.AssetPath + "/screensaver.jpg"
 
+	// Prepare the audio system if we are running linux
+	// needed for Raspberry PI. For Linux PC its nice to have feature
+	InitLinux()
+
+	//
+	// Start the player
+	//
+	log.Println("create player")
 	player := NewPlayer(cfg)
 	player.InitPlaylist([]byte("[]"))
 
@@ -75,5 +83,6 @@ func main() {
 		Player: player,
 	}
 
+	log.Println("starting webserver")
 	server.Run(cfg.Port)
 }

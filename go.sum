@@ -2,6 +2,8 @@ github.com/ebitengine/purego v0.5.1 h1:hNunhThpOf1vzKl49v6YxIsXLhl92vbBEv1/2Ez3Z
 github.com/ebitengine/purego v0.5.1/go.mod h1:ah1In8AOtksoNK6yk5z1HTJeUkC1Ez4Wk2idgGslMwQ=
 github.com/gen2brain/go-mpv v0.2.2 h1:wY+ZmV7T+ecYRTXdamv0HE2tQoXhzL6Fn739heTEYj4=
 github.com/gen2brain/go-mpv v0.2.2/go.mod h1:N5MXc5oIJTgSDZNGgaCNQcANOXGQ2lyUAaGwPVZRX9g=
+github.com/lawl/pulseaudio v0.0.0-20220626105240-976bed5e247c h1:j96x2SroUFS59ENzG7vI5n/hJ79qDYv8/MJ7pumgJCk=
+github.com/lawl/pulseaudio v0.0.0-20220626105240-976bed5e247c/go.mod h1:9h36x4KH7r2V8DOCKoPMt87IXZ++X90y8D5nnuwq290=
 github.com/veandco/go-sdl2 v0.4.38 h1:lx8syOA2ccXlgViYkQe2Kn/4xt+p9mdd1Qc/yYMrmSo=
 github.com/veandco/go-sdl2 v0.4.38/go.mod h1:OROqMhHD43nT4/i9crJukyVecjPNYYuCofep6SNiAjY=
 golang.org/x/sys v0.12.0 h1:CM0HF96J0hcLAwsHPJZjfdNzs0gftsLfgKt57wWHJ0o=

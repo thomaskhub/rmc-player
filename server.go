@@ -29,6 +29,7 @@ func (s *Server) Run(port string) {
 	http.HandleFunc("/files", s.filesHandler)
 	http.HandleFunc("/cmd", s.commandHandler)
 	http.HandleFunc("/mediaInfo", s.mediaInfoHandler)
+	http.HandleFunc("/settings", s.settingsHandler)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
@@ -75,6 +76,38 @@ func (s *Server) commandHandler(w http.ResponseWriter, r *http.Request) {
 			time := fmt.Sprintf("%d", int(params["time"].(float64)))
 			println(time)
 			s.Player.m.Command([]string{"seek", time, "absolute"})
+		case "saveConfig":
+			params := result["params"].(map[string]interface{})
+
+			if params["audioDevice"] != nil {
+				audioOutput := params["audioDevice"].(string)
+				if len(audioOutput) > 0 {
+					cfg.AudioOutput = audioOutput
+				}
+				fmt.Printf("audioOutput: %v\n", audioOutput)
+			}
+
+			if params["primaryResolution"] != nil {
+				resolution := params["primaryResolution"].(string)
+				if len(resolution) > 0 {
+					if cfg.PrimaryResolution != resolution {
+						SetRandrMonitorResolution(true, resolution)
+					}
+					cfg.PrimaryResolution = resolution
+				}
+			}
+
+			if params["secondaryResolution"] != nil {
+				resolution := params["secondaryResolution"].(string)
+				if len(resolution) > 0 {
+					if cfg.SecondaryResolution != resolution {
+						SetRandrMonitorResolution(false, resolution)
+					}
+					cfg.SecondaryResolution = resolution
+				}
+			}
+
+			UpdateConfigFile()
 		}
 		w.WriteHeader(http.StatusOK)
 
@@ -121,10 +154,33 @@ func (s *Server) mediaInfoHandler(w http.ResponseWriter, r *http.Request) {
 			"volume":   volume,
 			"muted":    muted == "yes",
 			"paused":   paused == "yes",
+			"os":       runtime.GOOS,
 		}
 
 		jsonData, _ := json.Marshal(data)
 		w.Write(jsonData)
+	}
+}
+
+func (s *Server) settingsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		audioDevList, _ := GetAudioDevices()
+		monitor := GetRandrMonitorDetails()
+
+		data := map[string]interface{}{
+			"arch":                    runtime.GOARCH,
+			"os":                      runtime.GOOS,
+			"audioDevList":            audioDevList,
+			"audioDevice":             cfg.AudioOutput,
+			"primaryResolution":       cfg.PrimaryResolution,
+			"secondaryResolution":     cfg.SecondaryResolution,
+			"primaryResolutionList":   monitor.PrimaryResolutionList,
+			"secondaryResolutionList": monitor.SecondaryResolutionList,
+		}
+
+		jsonData, _ := json.Marshal(data)
+		w.Write(jsonData)
+		return
 	}
 }
 

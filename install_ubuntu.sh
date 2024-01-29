@@ -10,12 +10,24 @@
 #
 GIT_REPO=https://github.com/thomaskhub/rmc-player
 GIT_BRANCH=main
-GO_URL=https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
+
 GO_BIN=/opt/rmc/go/bin/go
 INSTALL_DIR=/opt/rmc
 DEKSTOP_DIR=/usr/share/applications
 DESKTOP_FILE=rmc-player.desktop
 
+
+# check if raspi-config is installed which means we are running a rasbian os thing
+# right now we only support the 64 bit version of raspbian os
+if [[ -f /usr/bin/raspi-config ]]; then
+    DEVICE=pi
+    GO_URL=https://go.dev/dl/go1.21.6.linux-arm64.tar.gz
+    GO_NAME=go1.21.6.linux-arm64.tar.gz
+else 
+    DEVICE=pc
+    GO_URL=https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
+    GO_NAME=go1.21.6.linux-amd64.tar.gz
+fi;
 
 
 #
@@ -29,6 +41,41 @@ function echoError() {
     echo -e "\033[0;31m[error]: $1\033[0m"
 }
 
+function insallPi () {
+    echoInfo "installing pi specific things to make it run as a standaline media center"
+    #TODO: exit is only there to ensure we do not run this if we are not on the pi until its 
+    #tested properly
+    exit 0
+
+
+
+    #Xorg / X11 setup
+    echoInfo "install xorg and desktop dependencies"
+    sudo apt install -y xorg xserver-xorg xinit
+
+    #install configuration for enabling wifi hot spot on wlan0 with ip 192.168.90.1, and channel 11
+    echoInfo "install wifi hot spot"
+  
+    sudo cp ./assets/autohotspot.service /etc/systemd/system/autohotspot.service
+    sudo systemctl enable autohotspot.service
+
+    sudo cp ./assets/autohotspot.sh /usr/bin/autohotspot
+    sudo chmod 755 /usr/bin/autohotspot
+
+    #copy dnamasq.conf to the dns default dir 
+    sudo cp ./assets/dnsmasq.conf /etc/dnsmasq.conf
+    sudo chmod 755 /etc/dnsmasq.conf
+
+    # copy the hostapd file to the default dir 
+    sudo cp ./assets/hostapd.conf /etc/hostapd/hostapd.conf
+    sudo chmod 755 /etc/hostapd/hostapd.conf
+
+    # write a service with the name rmc.service it should run /opt/rmc/rmc-player/rmc-player -c /opt/rmc/rmc-player/config.json
+    # using xinit when the system boots
+    sudo cp ./assets/rmc.service /etc/systemd/system/rmc.service
+    sudo systemctl enable rmc.service
+    sudo systemctl start rmc.service
+}
 
 
 #
@@ -96,10 +143,15 @@ function install() {
     cd $INSTALL_DIR/rmc-player
     $GO_BIN build -o rmc-player
 
-    # Install Desktop file so that rmc can be started from gui
-    echoInfo "installing desktop file..."
-    sudo cp ./$DESKTOP_FILE $DEKSTOP_DIR
+    # Install Desktop file so that rmc can be started from gui if its on a pc
+    if [[ "$DEVICE" == "pc" ]]; then
+        echoInfo "installing desktop file..."
+        sudo cp ./$DESKTOP_FILE $DEKSTOP_DIR
+    else
+        installPi
+    fi
 
+ 
     # now we are done 
     cd $CWD
 
