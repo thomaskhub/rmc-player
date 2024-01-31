@@ -16,6 +16,20 @@
 
 # setup and start the hotspot on every boot
 echo "Creating hotspot"
+
+
+# first we setup the hotspot name and passowrd. byu reading it froom config files 
+# in the boot directory. This way users can easily change user name password 
+# by pluggin the sd card into any computer with fat32 support
+WIFI_PASSWORD=$(head -n 1 /boot/wifi_pw.txt)
+WIFI_SSID=$(head -n 1 /boot/wifi_ssid.txt)
+
+cp /opt/rmc/rmc-player/assets/hostapd.conf /tmp/hostapd.conf
+sed -i "s/^wpa_passphrase=.*$/wpa_passphrase=${WIFI_PASSWORD}/" /tmp/hostapd.conf
+sed -i "s/^ssid=.*$/ssid=${$WIFI_SSID}/" /tmp/hostapd.conf
+sudo cp /rmp/hostapd.conf /etc/hostapd/hostapd.conf
+
+
 sudo systemctl stop wpa_supplicant
 sudo systemctl stop NetworkManager
 sudo systemctl stop dnsmasq
@@ -28,17 +42,6 @@ sudo ip link set dev wlan0 up
   
 sudo systemctl start dnsmasq
 sudo systemctl start hostapd
-
-#
-# See if we need to start the controller also
-#
-#TODO: we should start a small python window manager 
-# once xorg and the player is started it should start the 
-# controller and move it to secondary display. If we do not 
-# have a 2nd display it will not start the controller. 
-# on the first version controller will need to run on 
-# a secondary device like laptop or android phone
-
 
 
 # start the player and ensure it comes back up when terminated

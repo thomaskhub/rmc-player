@@ -3,8 +3,8 @@ Description=RMC Player Service
 After=network-online.target
 
 [Service]
-User=pi
-Group=pi
+User=root
+Group=root
 Type=simple
 WorkingDirectory=/opt/rmc
 ExecStart=/opt/rmc/rmc-player/assets/pi_run.sh

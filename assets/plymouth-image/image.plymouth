@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Simple Image
+Description=Display a image in the center of the screen 
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/image
+ScriptFile=/usr/share/plymouth/themes/image/image.script
