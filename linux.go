@@ -8,23 +8,10 @@ import (
 func InitLinux() {
 	if runtime.GOOS == "linux" {
 		log.Println("we are running on linux so init the linux system")
-		//Audio Setup
-		PulseSetVolume(100)
-		devices, err := GetAudioDevices()
-		if err == nil { //set first output if nothing is stored
-			var hasDefault = false
-			for _, dev := range devices {
-				if dev == cfg.AudioOutput {
-					PlayerSetAudioDevice(cfg.AudioOutput)
-					hasDefault = true
-					break
-				}
-			}
 
-			if !hasDefault {
-				cfg.AudioOutput = devices[0]
-				PlayerSetAudioDevice(cfg.AudioOutput)
-			}
+		if IsRaspberryPi() {
+			//only for the pi we meddle with the sound. On laptop we keep it to the OS
+			PulseSetVolume(20)
 		}
 
 		//Resolution Setup

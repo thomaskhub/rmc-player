@@ -164,8 +164,14 @@ func (s *Server) mediaInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) settingsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		audioDevList, _ := GetAudioDevices()
+		soundCards, _ := PulseGetAudioDevices()
 		monitor := GetRandrMonitorDetails()
+
+		//convert soundcard to a simple array containing only the soundcard names
+		audioDevList := make([]string, 0)
+		for _, soundCard := range soundCards {
+			audioDevList = append(audioDevList, soundCard.Name)
+		}
 
 		data := map[string]interface{}{
 			"arch":                    runtime.GOARCH,

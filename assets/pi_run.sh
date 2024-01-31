@@ -39,7 +39,9 @@ sudo ip addr flush wlan0
 sudo ip link set dev wlan0 down
 sudo ip addr add 192.168.90.1/24 brd + dev wlan0
 sudo ip link set dev wlan0 up
-  
+
+sudo systemctl unmask dnsmasq
+sudo systemctl unmask hostapd
 sudo systemctl start dnsmasq
 sudo systemctl start hostapd
 

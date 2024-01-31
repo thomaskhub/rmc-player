@@ -14,7 +14,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lawl/pulseaudio"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -29,54 +28,39 @@ type Monitor struct {
 	SecondaryName           string
 }
 
-func GetAudioDevices() ([]string, error) {
+type SoundCard struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+}
+
+func PulseGetAudioDevices() ([]SoundCard, error) {
 	if runtime.GOOS == "linux" {
-		// if runtime.GOOS == "linux" && (runtime.GOARCH == "arm" || runtime.GOARCH == "arm64") {
-		client, err := pulseaudio.NewClient()
-		if err != nil {
-			log.Println(err)
-			return nil, err
-		}
-		defer client.Close()
-
-		sinks, err := client.Sinks()
+		//use pactl command to get a list of all output devices
+		cmd := exec.Command("pactl", "--format", "json", "list", "short", "sinks")
+		out, err := cmd.Output()
 		if err != nil {
 			log.Println(err)
 			return nil, err
 		}
 
-		var ret []string
-		for _, item := range sinks {
-			ret = append(ret, item.Name)
+		//out is a json string of the soundcard. Unmarhsal the string to an array of soundcards
+		var soundCards []SoundCard
+		err = json.Unmarshal([]byte(out), &soundCards)
+		if err != nil {
+			log.Println(err)
+			return nil, err
 		}
 
-		keys := make(map[string]bool)
-		list := []string{}
-		for _, entry := range ret {
-			if _, value := keys[entry]; !value {
-				keys[entry] = true
-				list = append(list, entry)
-			}
+		scList := make([]SoundCard, 0)
+		for _, soundCard := range soundCards {
+			scList = append(scList, SoundCard{Index: soundCard.Index, Name: soundCard.Name})
 		}
 
-		return list, nil
+		return scList, nil
 	}
 	return nil, fmt.Errorf("not running in linux")
 }
 
-func PlayerSetAudioDevice(device string) error {
-	if runtime.GOOS == "linux" {
-		client, err := pulseaudio.NewClient()
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		defer client.Close()
-
-		client.SetDefaultSink(device)
-	}
-	return nil
-}
 func GetMonitorCount() int {
 	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
 		panic(err)
@@ -91,38 +75,42 @@ func GetMonitorCount() int {
 	return monitorCount
 }
 
-func PulseSetVolume(vol int) error {
+func PulseGetDefaultSink() (string, error) {
 	if runtime.GOOS == "linux" {
-		client, err := pulseaudio.NewClient()
-		if err != nil {
-			log.Println("Player::PoulseSetVolume::error --> ", err)
-			return err
-		}
-		defer client.Close()
 
-		client.SetVolume(float32(vol) / 100.0)
+		cmd := exec.Command("pactl", "get-default-sink")
+		sink, err := cmd.Output()
+		if err != nil {
+			log.Println("Player::PulseSetVolume::error --> ", err)
+			return "", err
+		}
+
+		return string(sink), nil
+
 	}
-	return nil
+	return "", errors.New("not running in linux")
 }
 
-func PulseGetVolume() int {
+func PulseSetVolume(vol int) error {
 	if runtime.GOOS == "linux" {
-		client, err := pulseaudio.NewClient()
-		if err != nil {
-			log.Println("Player::PoulseSetVolume::error --> ", err)
-			return -1
-		}
-		defer client.Close()
+		//use pactl to get the current default sink
 
-		pulseVol, err := client.Volume()
+		sink, err := PulseGetDefaultSink()
 		if err != nil {
-			return -1
+			log.Println("Player::PulseSetVolume::error --> ", err)
+			return err
 		}
 
-		var vol = int(pulseVol * 100)
-		return vol
+		name := strings.TrimSpace(sink)
+		cmd := exec.Command("pactl", "set-sink-volume", name, fmt.Sprintf("%d", vol*1000))
+
+		err = cmd.Run()
+		if err != nil {
+			log.Println("Player::PulseSetVolume::error --> ", err)
+			return err
+		}
 	}
-	return 100
+	return nil
 }
 
 func GetMonitorPositions() [][]int32 {
@@ -230,41 +218,11 @@ func UpdateConfigFile() {
 	}
 }
 
-// func GetRandrSupportedResolutions() []string {
-// 	out, err := exec.Command("xrandr").Output()
-// 	if err != nil {
-// 		return nil
-// 	}
-
-// 	var resolutions []string
-// 	for _, line := range strings.Split(string(out), "\n") {
-// 		parts := strings.Fields(line)
-
-// 		if len(parts) == 2 {
-// 			resolution := parts[0]
-// 			resolutions = append(resolutions, resolution)
-// 		}
-// 	}
-
-// 	//resolutions might contain duplicates remove them
-
-// 	keys := make(map[string]bool)
-// 	list := []string{}
-// 	for _, entry := range resolutions {
-// 		if _, value := keys[entry]; !value {
-// 			keys[entry] = true
-// 			tmp := strings.Split(entry, "x")
-
-// 			width, err := strconv.Atoi(tmp[0])
-// 			height, err1 := strconv.Atoi(tmp[1])
-// 			if err == nil && err1 == nil && width >= 800 && height >= 600 {
-// 				list = append(list, entry)
-// 			}
-// 		}
-// 	}
-
-// 	return list
-// }
+func IsRaspberryPi() bool {
+	//check if the tool raspi-config is available on the system
+	_, err := exec.LookPath("raspi-config")
+	return err == nil
+}
 
 func GetRandrCurrentResolution() string {
 	out, err := exec.Command("xrandr").Output()

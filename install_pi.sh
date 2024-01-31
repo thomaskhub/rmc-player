@@ -67,7 +67,7 @@ function installRmc() {
 
     git clone $GIT_REPO -b $GIT_BRANCH
     sudo apt install -y  libmpv2 libmpv-dev libsdl2-2.0-0 xorg xserver-xorg \
-        xinit x11-xserver-utils dbus
+        xinit x11-xserver-utils dbus pulseaudio
 
     # compile rmc player ![cd into the player directory]
     echoInfo "compiling rmc player..."
@@ -136,8 +136,8 @@ function installHotspot() {
     sudo cp ./assets/hostapd.conf /etc/hostapd/hostapd.conf
     sudo chmod 755 /etc/hostapd/hostapd.conf
 
-    sudo echo "$WIFI_PASSWORD" > /boot/wifi_pw.txt
-    sudo echo "$WIFI_SSID" > /boot/wifi_ssid.txt    
+    echo "$WIFI_PASSWORD"  | sudo tee  /boot/wifi_pw.txt
+    echo "$WIFI_SSID"  | sudo tee /boot/wifi_ssid.txt    
 }
 
 function setupAutologin(){

@@ -37,7 +37,7 @@ func NewPlayer(cfg Config) *Player {
 	player.m.SetPropertyString("input-conf", "./input.conf")
 
 	if cfg.EnableLog {
-		player.m.SetOptionString("log-file", "./rmc.log")
+		player.m.SetOptionString("log-file", "./rmc.log") //TODO: this should come from the config file
 	}
 
 	player.m.SetOptionString("osc", "no")
