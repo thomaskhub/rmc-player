@@ -323,6 +323,12 @@ func GetFullscreenGeometry() string {
 	return ""
 }
 
+func Shutdown() {
+	if IsRaspberryPi() {
+		exec.Command("poweroff").Run()
+	}
+}
+
 func GetRandrMonitorDetails() *Monitor {
 	out, err := exec.Command("xrandr").Output()
 	if err != nil {

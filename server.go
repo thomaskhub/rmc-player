@@ -71,6 +71,8 @@ func (s *Server) commandHandler(w http.ResponseWriter, r *http.Request) {
 			s.Player.PlayNext(false)
 		case "previous":
 			s.Player.PlayNext(true)
+		case "shutdown":
+			Shutdown()
 		case "seek":
 			params := result["params"].(map[string]interface{})
 			time := fmt.Sprintf("%d", int(params["time"].(float64)))
