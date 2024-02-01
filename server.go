@@ -60,13 +60,13 @@ func (s *Server) commandHandler(w http.ResponseWriter, r *http.Request) {
 			idx := int(params["idx"].(float64))
 			s.Player.PlayListIndex(idx - 1)
 		case "play":
-			s.Player.m.SetOptionString("pause", "no")
+			s.Player.mpv.SetOptionString("pause", "no")
 		case "playPause":
-			s.Player.m.Command([]string{"cycle", "pause"})
+			s.Player.mpv.Command([]string{"cycle", "pause"})
 		case "pause":
-			s.Player.m.SetOptionString("pause", "yes")
+			s.Player.mpv.SetOptionString("pause", "yes")
 		case "mute":
-			s.Player.m.Command([]string{"cycle", "mute"})
+			s.Player.mpv.Command([]string{"cycle", "mute"})
 		case "next":
 			s.Player.PlayNext(false)
 		case "previous":
@@ -75,13 +75,20 @@ func (s *Server) commandHandler(w http.ResponseWriter, r *http.Request) {
 			params := result["params"].(map[string]interface{})
 			time := fmt.Sprintf("%d", int(params["time"].(float64)))
 			println(time)
-			s.Player.m.Command([]string{"seek", time, "absolute"})
+			s.Player.mpv.Command([]string{"seek", time, "absolute"})
 		case "saveConfig":
 			params := result["params"].(map[string]interface{})
 
 			if params["audioDevice"] != nil {
 				audioOutput := params["audioDevice"].(string)
 				if len(audioOutput) > 0 {
+					if cfg.AudioOutput != audioOutput {
+						PulseSetAudioOutput(audioOutput)
+						//change the window geometry so we see it in fullscreen as
+						//we might not have a window manager that does this for us
+						fullscreenGeometry := GetFullscreenGeometry()
+						s.Player.mpv.SetOptionString("geometry", fullscreenGeometry)
+					}
 					cfg.AudioOutput = audioOutput
 				}
 				fmt.Printf("audioOutput: %v\n", audioOutput)
@@ -120,11 +127,11 @@ func (s *Server) mediaInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
 
-		timePos, _ := s.Player.m.GetProperty("time-pos", mpv.FormatInt64)
-		duration, _ := s.Player.m.GetProperty("duration", mpv.FormatInt64)
-		volume := s.Player.m.GetPropertyString("volume")
-		muted := s.Player.m.GetPropertyString("mute")
-		paused := s.Player.m.GetPropertyString("pause")
+		timePos, _ := s.Player.mpv.GetProperty("time-pos", mpv.FormatInt64)
+		duration, _ := s.Player.mpv.GetProperty("duration", mpv.FormatInt64)
+		volume := s.Player.mpv.GetPropertyString("volume")
+		muted := s.Player.mpv.GetPropertyString("mute")
+		paused := s.Player.mpv.GetPropertyString("pause")
 
 		playlist, idx := s.Player.playlist.GetPlaylist()
 

@@ -17,7 +17,7 @@ import (
 type Player struct {
 	playlist  Playlist
 	decKeyMap map[string]string
-	m         *mpv.Mpv
+	mpv       *mpv.Mpv
 }
 
 type ClientMessage struct {
@@ -29,43 +29,34 @@ func NewPlayer(cfg Config) *Player {
 
 	player := &Player{
 		playlist: Playlist{},
-		m:        mpv.New(),
+		mpv:      mpv.New(),
 	}
 
-	player.m.SetPropertyString("input-default-bindings", "yes")
-	player.m.SetPropertyString("input-vo-keyboard", "yes")
-	player.m.SetPropertyString("input-conf", "./input.conf")
+	player.mpv.SetPropertyString("input-default-bindings", "yes")
+	player.mpv.SetPropertyString("input-vo-keyboard", "yes")
+	player.mpv.SetPropertyString("input-conf", "./input.conf")
 
 	if cfg.EnableLog {
-		player.m.SetOptionString("log-file", "./rmc.log") //TODO: this should come from the config file
+		player.mpv.SetOptionString("log-file", "./rmc.log") //TODO: this should come from the config file
 	}
 
-	player.m.SetOptionString("osc", "no")
-	player.m.SetOptionString("osd-in-seek", "msq-bar")
-	player.m.SetOptionString("fs", "yes")
-	player.m.SetOptionString("keep-open", "yes")
-	player.m.SetOptionString("force-window", "yes")
+	player.mpv.SetOptionString("osc", "no")
+	player.mpv.SetOptionString("osd-in-seek", "msq-bar")
+	player.mpv.SetOptionString("fs", "yes")
+	player.mpv.SetOptionString("keep-open", "yes")
+	player.mpv.SetOptionString("force-window", "yes")
 
-	player.m.SetOptionString("script", "./lua/keybindings.lua")
+	player.mpv.SetOptionString("script", "./lua/keybindings.lua")
 
-	monitorPositions := GetMonitorPositions()
+	fullscreenGeometry := GetFullscreenGeometry()
+	player.mpv.SetOptionString("geometry", fullscreenGeometry)
 
-	if len(monitorPositions) > 1 {
-		x := monitorPositions[1][0]
-		y := monitorPositions[1][1]
-		width := monitorPositions[1][2]
-		height := monitorPositions[1][3]
-		geometry := fmt.Sprintf("%dx%d+%d+%d", width, height, x, y)
-
-		player.m.SetOptionString("geometry", geometry)
-	}
-
-	player.m.SetProperty("osd-duration", mpv.FormatInt64, 2000)
-	player.m.ObserveProperty(0, "eof-reached", mpv.FormatFlag)
+	player.mpv.SetProperty("osd-duration", mpv.FormatInt64, 2000)
+	player.mpv.ObserveProperty(0, "eof-reached", mpv.FormatFlag)
 
 	player.decKeyMap = make(map[string]string)
 
-	err := player.m.Initialize()
+	err := player.mpv.Initialize()
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +64,7 @@ func NewPlayer(cfg Config) *Player {
 	//start the event loop
 	go func() {
 		for {
-			e := player.m.WaitEvent(10000)
+			e := player.mpv.WaitEvent(10000)
 			switch e.EventID {
 			case mpv.EventPropertyChange:
 				prop := e.Property()
@@ -131,7 +122,7 @@ func NewPlayer(cfg Config) *Player {
 }
 
 func (p *Player) InitPlaylist(playlist []byte) {
-	err := p.m.Command([]string{"loadfile", ScreensaverImage})
+	err := p.mpv.Command([]string{"loadfile", ScreensaverImage})
 	// err := p.m.Command([]string{"loadfile", "./assets/screensaver.jpg"})
 	if err != nil {
 		panic(err)
@@ -141,7 +132,7 @@ func (p *Player) InitPlaylist(playlist []byte) {
 }
 
 func (p *Player) PlaySingleFile(path string) {
-	err := p.m.Command([]string{"loadfile", path})
+	err := p.mpv.Command([]string{"loadfile", path})
 	if err != nil {
 		panic(err)
 	}
@@ -164,23 +155,23 @@ func (p *Player) PlayNext(direction bool) {
 		return
 	}
 
-	p.m.SetOptionString("start", fmt.Sprintf("%d", item.Seek))
+	p.mpv.SetOptionString("start", fmt.Sprintf("%d", item.Seek))
 	extension := filepath.Ext(item.Path)
 
 	//check if extension is a key in the p.decKeyMap
 	if _, ok := p.decKeyMap[extension]; ok {
 		data := fmt.Sprintf("protocol_whitelist=[crypto],decryption_key=%s", p.decKeyMap[extension])
-		p.m.SetOptionString("demuxer-lavf-o", data)
+		p.mpv.SetOptionString("demuxer-lavf-o", data)
 	}
 
 	//start playback of the pallist item path
-	p.m.Command([]string{"loadfile", item.Path})
-	p.m.SetOptionString("pause", "no")
+	p.mpv.Command([]string{"loadfile", item.Path})
+	p.mpv.SetOptionString("pause", "no")
 
 }
 
 func (p *Player) Close() {
-	p.m.TerminateDestroy()
+	p.mpv.TerminateDestroy()
 }
 
 func (p *Player) SetDecMap(playlist []byte) {

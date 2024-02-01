@@ -39,6 +39,7 @@ func PulseGetAudioDevices() ([]SoundCard, error) {
 		cmd := exec.Command("pactl", "--format", "json", "list", "short", "sinks")
 		out, err := cmd.Output()
 		if err != nil {
+			//please readn standard error here and print it
 			log.Println(err)
 			return nil, err
 		}
@@ -61,6 +62,21 @@ func PulseGetAudioDevices() ([]SoundCard, error) {
 	return nil, fmt.Errorf("not running in linux")
 }
 
+func PulseSetAudioOutput(device string) error {
+	if runtime.GOOS == "linux" {
+		//use pactl command to set the output device
+		cmd := exec.Command("pactl", "set-default-sink", device)
+		err := cmd.Run()
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
 func GetMonitorCount() int {
 	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
 		panic(err)
@@ -81,7 +97,7 @@ func PulseGetDefaultSink() (string, error) {
 		cmd := exec.Command("pactl", "get-default-sink")
 		sink, err := cmd.Output()
 		if err != nil {
-			log.Println("Player::PulseSetVolume::error --> ", err)
+			log.Println("Player::PulseGetDefaultSink::error --> ", err)
 			return "", err
 		}
 
@@ -106,7 +122,7 @@ func PulseSetVolume(vol int) error {
 
 		err = cmd.Run()
 		if err != nil {
-			log.Println("Player::PulseSetVolume::error --> ", err)
+			log.Println("Player::PulseSetVolume:error:: set sink volume not working", err)
 			return err
 		}
 	}
@@ -293,6 +309,20 @@ func GetRandrMonitorName(line string) string {
 	return parts[0]
 }
 
+func GetFullscreenGeometry() string {
+	monitorPositions := GetMonitorPositions()
+
+	if len(monitorPositions) > 1 {
+		x := monitorPositions[1][0]
+		y := monitorPositions[1][1]
+		width := monitorPositions[1][2]
+		height := monitorPositions[1][3]
+		return fmt.Sprintf("%dx%d+%d+%d", width, height, x, y)
+	}
+
+	return ""
+}
+
 func GetRandrMonitorDetails() *Monitor {
 	out, err := exec.Command("xrandr").Output()
 	if err != nil {
@@ -340,6 +370,11 @@ func GetRandrMonitorDetails() *Monitor {
 }
 
 func SetRandrMonitorResolution(primary bool, resolution string) error {
+	//execute only on linux
+	if runtime.GOOS != "linux" {
+		return nil
+	}
+
 	monitor := GetRandrMonitorDetails()
 	if monitor == nil {
 		return errors.New("no monitor details available")
