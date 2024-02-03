@@ -2,4 +2,4 @@
 Type=Application
 Name=rmc-player
 Exec=/opt/rmc/rmc-player/rmc-player -c /opt/rmc/rmc-player/config.json
-Icon=/opt/rmc/rmc-player/icons/desktop.svg
+Icon=/opt/rmc/rmc-player/assets/icon.png

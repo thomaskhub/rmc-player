@@ -98,9 +98,13 @@ func (s *Server) commandHandler(w http.ResponseWriter, r *http.Request) {
 
 			if params["primaryResolution"] != nil {
 				resolution := params["primaryResolution"].(string)
+
 				if len(resolution) > 0 {
 					if cfg.PrimaryResolution != resolution {
-						SetRandrMonitorResolution(true, resolution)
+						err := SetRandrMonitorResolution(true, resolution)
+						if err != nil {
+							log.Println(err)
+						}
 					}
 					cfg.PrimaryResolution = resolution
 				}
@@ -183,14 +187,17 @@ func (s *Server) settingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		data := map[string]interface{}{
-			"arch":                    runtime.GOARCH,
-			"os":                      runtime.GOOS,
-			"audioDevList":            audioDevList,
-			"audioDevice":             cfg.AudioOutput,
-			"primaryResolution":       cfg.PrimaryResolution,
-			"secondaryResolution":     cfg.SecondaryResolution,
-			"primaryResolutionList":   monitor.PrimaryResolutionList,
-			"secondaryResolutionList": monitor.SecondaryResolutionList,
+			"arch":                runtime.GOARCH,
+			"os":                  runtime.GOOS,
+			"audioDevList":        audioDevList,
+			"audioDevice":         cfg.AudioOutput,
+			"primaryResolution":   cfg.PrimaryResolution,
+			"secondaryResolution": cfg.SecondaryResolution,
+		}
+
+		if monitor != nil {
+			data["primaryResolutionList"] = monitor.PrimaryResolutionList
+			data["secondaryResolutionList"] = monitor.SecondaryResolutionList
 		}
 
 		jsonData, _ := json.Marshal(data)

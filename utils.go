@@ -108,23 +108,40 @@ func PulseGetDefaultSink() (string, error) {
 }
 
 func PulseSetVolume(vol int) error {
-	if runtime.GOOS == "linux" {
-		//use pactl to get the current default sink
-
-		sink, err := PulseGetDefaultSink()
+	if IsRaspberryPi() {
+		//we will set the audio for all audio devices so that when we shift we are using the
+		//same value for all the cards so that volume is approximately the same
+		devices, err := PulseGetAudioDevices()
 		if err != nil {
 			log.Println("Player::PulseSetVolume::error --> ", err)
 			return err
 		}
 
-		name := strings.TrimSpace(sink)
-		cmd := exec.Command("pactl", "set-sink-volume", name, fmt.Sprintf("%d", vol*1000))
-
-		err = cmd.Run()
-		if err != nil {
-			log.Println("Player::PulseSetVolume:error:: set sink volume not working", err)
-			return err
+		//iterate over the devices
+		for _, device := range devices {
+			name := strings.TrimSpace(device.Name)
+			cmd := exec.Command("pactl", "set-sink-volume", name, fmt.Sprintf("%d", vol*1000))
+			err = cmd.Run()
+			if err != nil {
+				log.Println("Player::PulseSetVolume::error --> ", err)
+				return err
+			}
 		}
+
+		// sink, err := PulseGetDefaultSink()
+		// if err != nil {
+		// 	log.Println("Player::PulseSetVolume::error --> ", err)
+		// 	return err
+		// }
+
+		// name := strings.TrimSpace(sink)
+		// cmd := exec.Command("pactl", "set-sink-volume", name, fmt.Sprintf("%d", vol*1000))
+
+		// err = cmd.Run()
+		// if err != nil {
+		// 	log.Println("Player::PulseSetVolume:error:: set sink volume not working", err)
+		// 	return err
+		// }
 	}
 	return nil
 }
@@ -240,22 +257,6 @@ func IsRaspberryPi() bool {
 	return err == nil
 }
 
-func GetRandrCurrentResolution() string {
-	out, err := exec.Command("xrandr").Output()
-	if err != nil {
-		return ""
-	}
-
-	for _, line := range strings.Split(string(out), "\n") {
-		if strings.Contains(line, "*") {
-			parts := strings.Fields(line)
-			return parts[0]
-		}
-	}
-
-	return "1920x1080"
-}
-
 const (
 	MONITOR_PRIMARY   = 0
 	MONITOR_SECONDARY = 1
@@ -304,11 +305,6 @@ func GetRandrResolutionsFromLines(data []string) ([]string, string) {
 	return resolutions, currentRes
 }
 
-func GetRandrMonitorName(line string) string {
-	parts := strings.Fields(line)
-	return parts[0]
-}
-
 func GetFullscreenGeometry() string {
 	monitorPositions := GetMonitorPositions()
 
@@ -330,6 +326,10 @@ func Shutdown() {
 }
 
 func GetRandrMonitorDetails() *Monitor {
+	if !IsRaspberryPi() {
+		return nil
+	}
+
 	out, err := exec.Command("xrandr").Output()
 	if err != nil {
 		return nil
@@ -376,8 +376,8 @@ func GetRandrMonitorDetails() *Monitor {
 }
 
 func SetRandrMonitorResolution(primary bool, resolution string) error {
-	//execute only on linux
-	if runtime.GOOS != "linux" {
+
+	if !IsRaspberryPi() {
 		return nil
 	}
 
@@ -400,4 +400,12 @@ func SetRandrMonitorResolution(primary bool, resolution string) error {
 	}
 
 	return nil
+}
+
+func GetRandrMonitorName(line string) string {
+	if !IsRaspberryPi() {
+		return ""
+	}
+	parts := strings.Fields(line)
+	return parts[0]
 }

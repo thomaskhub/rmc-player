@@ -5,29 +5,13 @@
 # (for mac use the provided macos dmg)
 #
 
-#
-# configs
-#
-GIT_REPO=https://github.com/thomaskhub/rmc-player
-GIT_BRANCH=main
 
 GO_BIN=/opt/rmc/go/bin/go
 INSTALL_DIR=/opt/rmc
 DEKSTOP_DIR=/usr/share/applications
 DESKTOP_FILE=rmc-player.desktop
-
-
-# check if raspi-config is installed which means we are running a rasbian os thing
-# right now we only support the 64 bit version of raspbian os
-if [[ -f /usr/bin/raspi-config ]]; then
-    DEVICE=pi
-    GO_URL=https://go.dev/dl/go1.21.6.linux-arm64.tar.gz
-    GO_NAME=go1.21.6.linux-arm64.tar.gz
-else 
-    DEVICE=pc
-    GO_URL=https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
-    GO_NAME=go1.21.6.linux-amd64.tar.gz
-fi;
+GO_URL=https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
+GO_NAME=go1.21.6.linux-amd64.tar.gz
 
 
 #
@@ -46,8 +30,6 @@ function insallPi () {
     #TODO: exit is only there to ensure we do not run this if we are not on the pi until its 
     #tested properly
     exit 0
-
-
 
     #Xorg / X11 setup
     echoInfo "install xorg and desktop dependencies"
@@ -97,25 +79,17 @@ function install() {
     sudo chown -R $USER $INSTALL_DIR
     sudo chmod -R 777 $INSTALL_DIR
 
-    cd $INSTALL_DIR
-
-    #check if git is installed
-    git --version &> /dev/null
-    if [[ $? -eq 127 ]]; then
-        echoInfo "git not installed, installing..."
-        sudo apt install -y git
-    fi
-
-    echoInfo "Cloning git repository..."
-    git clone $GIT_REPO -b $GIT_BRANCH
-
-    #check if go file exits or not
+    mkdir -p $INSTALL_DIR/rmc-player
+    
+    # check if the GO_BIN exists if not get GO_URL, extract it to INSTALL_DIR/go and remove the tar file
     if [[ ! -f $GO_BIN ]]; then
-        echoInfo "go version $version is not ok, installing it temorarily..."
-        wget -nc $GO_URL
-        tar -xzf go1.21.6.linux-amd64.tar.gz
-        rm go1.21.6.linux-amd64.tar.gz
+        echoInfo "go not installed, installing..."
+        wget -P /tmp -nc $GO_URL
+        tar -xzf /tmp/$GO_NAME -C $INSTALL_DIR
+        rm /tmp/$GO_NAME
     fi
+
+    # cd $INSTALL_DIR
 
     # check if we are running on ubuntu 22 or ubuntu 23
     osVersion=$(lsb_release -rs)
@@ -140,17 +114,17 @@ function install() {
 
     # compile rmc player 
     echoInfo "compiling rmc player..."
-    cd $INSTALL_DIR/rmc-player
-    $GO_BIN build -o rmc-player
+    $GO_BIN build -o $INSTALL_DIR/rmc-player
+    
+    echoInfo "copy the assets and config files"
+    cp -r ./assets $INSTALL_DIR/rmc-player
+    cp ./input.con $INSTALL_DIR/rmc-player
+    cp ./config_ubuntu.json $INSTALL_DIR/rmc-player/config.json
+
 
     # Install Desktop file so that rmc can be started from gui if its on a pc
-    if [[ "$DEVICE" == "pc" ]]; then
-        echoInfo "installing desktop file..."
-        sudo cp ./$DESKTOP_FILE $DEKSTOP_DIR
-    else
-        installPi
-    fi
-
+    echoInfo "installing desktop file..."
+    sudo cp ./$DESKTOP_FILE $DEKSTOP_DIR
  
     # now we are done 
     cd $CWD
@@ -176,7 +150,7 @@ if [[ "$1" == "install" ]]; then
 elif [[ "$1" == "uninstall" ]]; then
     uninstall
 else
-    echoError "invalid argument"
+    echo "please specify an argument: install, uninstall"
     exit 1
 fi
 

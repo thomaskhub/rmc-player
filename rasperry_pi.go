@@ -1,17 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os/exec"
 	"runtime"
 )
 
-func InitLinux() {
-	if runtime.GOOS == "linux" {
-		log.Println("we are running on linux so init the linux system")
+func InitRaspberryPi() {
+	fmt.Printf("runtime.GOOS: %v\n", runtime.GOOS)
+	if IsRaspberryPi() {
+		log.Println("we are running on PI so init the pi system system")
 
-		if IsRaspberryPi() {
-			//only for the pi we meddle with the sound. On laptop we keep it to the OS
-			PulseSetVolume(20)
+		//ensure the volume output is full power. The actual volume will be
+		//controlled with the mixer
+		PulseSetVolume(100)
+
+		//disable the screensaver using xset -d :0 s off command
+		cmd := exec.Command("xset", "-d", ":0", "s", "off")
+		err := cmd.Run()
+		if err != nil {
+			log.Println(err)
 		}
 
 		//Resolution Setup

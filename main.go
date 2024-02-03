@@ -70,7 +70,7 @@ func main() {
 
 	// Prepare the audio system if we are running linux
 	// needed for Raspberry PI. For Linux PC its nice to have feature
-	InitLinux()
+	InitRaspberryPi()
 
 	//
 	// Start the player
